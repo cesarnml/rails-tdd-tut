@@ -145,11 +145,18 @@ describe ArticlesController do
         end
       end
     end
-    # context "when authorized request" do
-    #   it "should return success response" do
-    #     subject
-    #     expect(response).to have_http_status(:ok)
-    #   end
-    # end
+  end
+
+  describe "#update" do
+    subject { put :update }
+
+    context "when no code provided" do
+      it_behaves_like "forbidden_requests"
+    end
+
+    context "when invalid code provided" do
+      before { request.headers["authorization"] = "Invalid token" }
+      it_behaves_like "forbidden_requests"
+    end
   end
 end
