@@ -18,10 +18,6 @@ class UserAuthenticator
     end
   end
 
-  def logout
-    raise AuthenticationError
-  end
-
   private
   attr_reader :code
 

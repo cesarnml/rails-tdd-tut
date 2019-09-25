@@ -11,6 +11,7 @@ class ApplicationController < ActionController::API
   def authorize!
     raise AuthorizationError unless current_user
   end
+  
   def access_token
     provided_token = request.authorization&.gsub(/\ABearer\s/, '')
     @access_token = AccessToken.find_by(token: provided_token)
