@@ -5,7 +5,7 @@ class ApplicationController < ActionController::API
   rescue_from AuthorizationError, with: :authorization_error
 
   before_action :authorize!
-  
+
   private
   
   def authorize!

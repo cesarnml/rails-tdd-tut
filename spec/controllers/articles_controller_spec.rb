@@ -39,4 +39,117 @@ describe ArticlesController do
       expect(json_data.first['id']).to eq(expected_article)
     end
   end
+
+  describe '#show' do
+    let(:article) { create :article }
+    subject { get :show, params: { id: article.id } }
+
+    it "should return success response" do
+      subject
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "should return proper json" do
+      subject
+      expect(json_data['attributes']).to eq({
+        "title" => article.title,
+        "content" => article.content,
+        "slug" => article.slug
+      })
+    end
+  end
+
+  describe "#create" do
+    subject { post :create }
+
+    context "when no code provided" do
+      it_behaves_like "forbidden_requests"
+    end
+
+    context "when invalid code provided" do
+      before { request.headers["authorization"] = "Invalid token" }
+      it_behaves_like "forbidden_requests"
+    end
+
+    context "when authorized" do
+      let(:user) { create :user}
+      let(:access_token) { user.create_access_token }
+      before { request.headers["authorization"] = "Bearer #{access_token.token}" }
+      context "when invalid parameters provided" do
+        let(:invalid_attributes) do
+          {
+            data: {
+              attributes: {
+                title: '',
+                content: ''
+              }
+            }
+          }
+        end
+        subject { post :create, params:  invalid_attributes }
+        it "should return 422 status code" do
+          subject
+          expect(response).to have_http_status(:unprocessable_entity)
+        end
+
+        it "should return proper error json" do
+          subject
+          expect(json["errors"]).to include(
+            {
+              "source" => { "pointer" => "/data/attributes/title"},
+              "detail" => "can't be blank"
+            },
+            {
+              "source" => { "pointer" => "/data/attributes/content"},
+              "detail" => "can't be blank"
+            },
+            {
+              "source" => { "pointer" => "/data/attributes/slug"},
+              "detail" => "can't be blank"
+            }
+          )
+        end
+      end
+
+      context "when valid request sent" do
+        let(:user) { create :user}
+        let(:access_token) { user.create_access_token }
+        before { request.headers["authorization"] = "Bearer #{access_token.token}"}
+
+        let(:valid_attributes) do
+          {
+            "data"=> {
+              "attributes" => {
+                "title" => 'test title',
+                "content" => 'test content',
+                "slug" => "test-title"
+              }
+            }
+          }
+        end
+
+        subject { post :create, params: valid_attributes }
+
+        it "should response with status code 201" do
+          subject
+          expect(response).to have_http_status(:created)
+        end
+
+        it "should have proper json body" do
+          subject
+          expect(json_data["attributes"]).to include(valid_attributes["data"]["attributes"])
+        end
+
+        it "should create the article" do
+          expect{ subject }.to change{ Article.count }.by(1)
+        end
+      end
+    end
+    # context "when authorized request" do
+    #   it "should return success response" do
+    #     subject
+    #     expect(response).to have_http_status(:ok)
+    #   end
+    # end
+  end
 end

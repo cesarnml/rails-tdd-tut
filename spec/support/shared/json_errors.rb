@@ -13,6 +13,7 @@ shared_examples_for "unauthorized_requests" do
   it "should return 401 status code" do 
     subject
     expect(response).to have_http_status(:unauthorized)
+    pp "JSON", json
   end
   it "should return proper error body" do
     subject
