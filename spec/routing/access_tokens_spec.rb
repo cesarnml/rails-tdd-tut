@@ -6,6 +6,6 @@ describe "access tokens routes" do
   end
 
   it "should route to access_tokens destroy action" do
-    expect(post "/logout").to route_to("access_tokens#destroy")
+    expect(delete "/logout").to route_to("access_tokens#destroy")
   end
 end

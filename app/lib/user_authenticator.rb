@@ -1,5 +1,6 @@
 class UserAuthenticator
   class AuthenticationError < StandardError; end
+
   attr_reader :user, :access_token
 
   def initialize(code)
@@ -15,6 +16,10 @@ class UserAuthenticator
     else
       user.create_access_token
     end
+  end
+
+  def logout
+    raise AuthenticationError
   end
 
   private
