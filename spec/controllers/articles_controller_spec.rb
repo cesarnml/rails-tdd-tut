@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 describe ArticlesController do
   describe 'index' do
@@ -31,7 +31,7 @@ describe ArticlesController do
       expect(json_data.last['id']).to eq(old_article.id.to_s)
     end
 
-    it 'should paginate results' do
+    it "should paginate results" do
       create_list :article, 3
       get :index, params: { page: 2, per_page: 1 }
       expect(json_data.length).to eq 1
@@ -40,7 +40,7 @@ describe ArticlesController do
     end
   end
 
-  describe '#show' do
+  describe "#show" do
     let(:article) { create :article }
     subject { get :show, params: { id: article.id } }
 
@@ -70,9 +70,9 @@ describe ArticlesController do
       before { request.headers["authorization"] = "Invalid token" }
       it_behaves_like "forbidden_requests"
     end
-
+    
     context "when authorized" do
-      let(:user) { create :user}
+      let(:user) { create :user }
       let(:access_token) { user.create_access_token }
       before { request.headers["authorization"] = "Bearer #{access_token.token}" }
       context "when invalid parameters provided" do
@@ -112,10 +112,6 @@ describe ArticlesController do
       end
 
       context "when valid request sent" do
-        let(:user) { create :user}
-        let(:access_token) { user.create_access_token }
-        before { request.headers["authorization"] = "Bearer #{access_token.token}"}
-
         let(:valid_attributes) do
           {
             "data"=> {
@@ -148,7 +144,10 @@ describe ArticlesController do
   end
 
   describe "#update" do
-    subject { patch :update, params: {id: 1} }
+    let(:user) { create :user }
+    let(:article) { create :article, user: user }
+    let(:access_token) { user.create_access_token }
+    subject { patch :update, params: {id: article.id} }
 
     context "when no code provided" do
       it_behaves_like "forbidden_requests"
@@ -160,13 +159,18 @@ describe ArticlesController do
     end
 
     context "when authorized" do
-      let(:user) { create :user }
-      let(:access_token) { user.create_access_token }
-
       before { request.headers["authorization"] = "Bearer #{access_token.token}"}
 
+      context "when trying to update not owned article" do
+        let(:other_user) { create :user }
+        let(:other_article) {create :article, user: other_user}
+  
+        subject { patch :update, params: {id: other_article.id }}
+  
+        it_behaves_like "forbidden_requests"
+      end
+
       context "when invalid parameters provided" do
-        let(:article) { create :article }
         let(:invalid_attributes) do
           {
             data: {
@@ -177,7 +181,7 @@ describe ArticlesController do
             }
           }
         end
-        subject { patch :update, params: invalid_attributes.merge("id" => article.id) }
+        subject { patch :update, params: invalid_attributes.merge(id: article.id) }
         it "should return 422 status code" do
           subject
           expect(response).to have_http_status(:unprocessable_entity)
@@ -198,11 +202,6 @@ describe ArticlesController do
         end
       end
       context "when valid request sent" do
-        let(:user) { create :user}
-        let(:access_token) { user.create_access_token }
-        let(:article) { create :article }
-        before { request.headers["authorization"] = "Bearer #{access_token.token}"}
-
         let(:valid_attributes) do
           {
             "data"=> {
@@ -228,9 +227,22 @@ describe ArticlesController do
 
         it "should update the article title" do
           subject
-          expect(json_data["attributes"]["title"]).to eq(article.reload.title)
+          expect(article.reload.title).to eq(valid_attributes['data']['attributes']['title'])
+        end
+
+        it "should update the article content" do
+          subject
+          expect(article.reload.content).to eq(valid_attributes['data']['attributes']['content'])
         end
       end
     end
+  end
+
+  describe "#destroy" do
+    let(:user) { create :user }
+    let(:article) { create :article, user: user }
+    let(:access_token) { user.create_access_token }
+
+    subject {delete :destroy, params: { id: user.id}}
   end
 end
