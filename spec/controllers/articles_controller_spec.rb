@@ -148,7 +148,7 @@ describe ArticlesController do
   end
 
   describe "#update" do
-    subject { put :update }
+    subject { put :update, params: {id: 1} }
 
     context "when no code provided" do
       it_behaves_like "forbidden_requests"
@@ -157,6 +157,32 @@ describe ArticlesController do
     context "when invalid code provided" do
       before { request.headers["authorization"] = "Invalid token" }
       it_behaves_like "forbidden_requests"
+    end
+
+    context "when authorized" do
+      let(:user) { create :user }
+      let(:access_token) { user.create_access_token }
+
+      before { request.headers["authorization"] = "Bearer #{access_token.token}"}
+
+      context "when invalid parameters provided" do
+        let(:article) { create :article }
+        let(:invalid_attributes) do
+          {
+            data: {
+              attributes: {
+                title: '',
+                content: ''
+              }
+            }
+          }
+        end
+        subject { patch :update, params: {id: article.id} }
+        it "should return 422 status code" do
+          subject
+          expect(response).to have_http_status(:unprocessable_entity)
+        end
+      end
     end
   end
 end
