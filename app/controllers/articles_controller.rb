@@ -34,8 +34,8 @@ class ArticlesController < ApplicationController
 
   def destroy
     article = current_user.articles.find(params[:id])
-    article.destroy!(article_params)
-      render status: :no_content
+    article.destroy!
+    render head: :no_content, status: :no_content
   rescue ActiveRecord::RecordNotFound
     authorization_error
   end

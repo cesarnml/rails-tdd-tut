@@ -27,8 +27,8 @@ describe ArticlesController do
       new_article = create :article
       subject
 
-      expect(json_data.first['id']).to eq(new_article.id.to_s)
-      expect(json_data.last['id']).to eq(old_article.id.to_s)
+      expect(json_data.first["id"]).to eq(new_article.id.to_s)
+      expect(json_data.last["id"]).to eq(old_article.id.to_s)
     end
 
     it "should paginate results" do
@@ -36,7 +36,7 @@ describe ArticlesController do
       get :index, params: { page: 2, per_page: 1 }
       expect(json_data.length).to eq 1
       expected_article = Article.recent.second.id.to_s
-      expect(json_data.first['id']).to eq(expected_article)
+      expect(json_data.first["id"]).to eq(expected_article)
     end
   end
 
@@ -116,8 +116,8 @@ describe ArticlesController do
           {
             "data"=> {
               "attributes" => {
-                "title" => 'test title',
-                "content" => 'test content',
+                "title" => "test title",
+                "content" => "test content",
                 "slug" => "test-title"
               }
             }
@@ -159,13 +159,13 @@ describe ArticlesController do
     end
 
     context "when authorized" do
-      before { request.headers["authorization"] = "Bearer #{access_token.token}"}
+      before { request.headers["authorization"] = "Bearer #{access_token.token}" }
 
       context "when trying to update not owned article" do
         let(:other_user) { create :user }
-        let(:other_article) {create :article, user: other_user}
+        let(:other_article) { create :article, user: other_user }
   
-        subject { patch :update, params: {id: other_article.id }}
+        subject { patch :update, params: {id: other_article.id } }
   
         it_behaves_like "forbidden_requests"
       end
@@ -204,10 +204,10 @@ describe ArticlesController do
       context "when valid request sent" do
         let(:valid_attributes) do
           {
-            "data"=> {
+            "data" => {
               "attributes" => {
-                "title" => 'update title',
-                "content" => 'update content',
+                "title" => "update title",
+                "content" => "update content",
               }
             }
           }
@@ -215,7 +215,7 @@ describe ArticlesController do
 
         subject { patch :update, params: valid_attributes.merge("id" => article.id) }
 
-        it "should response with status code 200" do
+        it "should respond with status code 200" do
           subject
           expect(response).to have_http_status(:ok)
         end
@@ -227,12 +227,12 @@ describe ArticlesController do
 
         it "should update the article title" do
           subject
-          expect(article.reload.title).to eq(valid_attributes['data']['attributes']['title'])
+          expect(article.reload.title).to eq(valid_attributes["data"]["attributes"]["title"])
         end
 
         it "should update the article content" do
           subject
-          expect(article.reload.content).to eq(valid_attributes['data']['attributes']['content'])
+          expect(article.reload.content).to eq(valid_attributes["data"]["attributes"]["content"])
         end
       end
     end
@@ -243,6 +243,44 @@ describe ArticlesController do
     let(:article) { create :article, user: user }
     let(:access_token) { user.create_access_token }
 
-    subject {delete :destroy, params: { id: user.id}}
+    subject { delete :destroy, params: { id: article.id } }
+
+    context "when no code provided" do
+      it_behaves_like "forbidden_requests"
+    end
+
+    context "when invalid code provided" do
+      before { request.headers["authorization"] = "Invalid code" }
+      it_behaves_like "forbidden_requests"
+    end
+
+    context "when authorized" do
+      before { request.headers["authorization"] = "Bearer #{access_token.token}" }
+      context "when trying to delete not owned article" do
+        let(:other_user) { create :user }
+        let(:other_article) { create :article, user: other_user }
+
+        subject { delete :destroy, params: { id: other_article.id } }
+
+        it_behaves_like "forbidden_requests"
+      end
+
+      context "when valid request sent" do
+        it "should respond with status code 204" do
+          subject
+          expect(response).to have_http_status(:no_content)
+        end
+
+        it "should have empty json body" do
+          subject
+          expect(response.body).to be_blank
+        end
+
+        it "should delete the article" do
+          article
+          expect{ subject }.to change{ user.articles.count }.by(-1)
+        end
+      end
+    end
   end
 end
