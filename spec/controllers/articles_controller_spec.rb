@@ -148,7 +148,7 @@ describe ArticlesController do
   end
 
   describe "#update" do
-    subject { put :update, params: {id: 1} }
+    subject { patch :update, params: {id: 1} }
 
     context "when no code provided" do
       it_behaves_like "forbidden_requests"
@@ -177,10 +177,58 @@ describe ArticlesController do
             }
           }
         end
-        subject { patch :update, params: {id: article.id} }
+        subject { patch :update, params: invalid_attributes.merge("id" => article.id) }
         it "should return 422 status code" do
           subject
           expect(response).to have_http_status(:unprocessable_entity)
+        end
+
+        it "should return proper error json" do
+          subject
+          expect(json["errors"]).to include(
+            {
+              "source" => { "pointer" => "/data/attributes/title"},
+              "detail" => "can't be blank"
+            },
+            {
+              "source" => { "pointer" => "/data/attributes/content"},
+              "detail" => "can't be blank"
+            }
+          )
+        end
+      end
+      context "when valid request sent" do
+        let(:user) { create :user}
+        let(:access_token) { user.create_access_token }
+        let(:article) { create :article }
+        before { request.headers["authorization"] = "Bearer #{access_token.token}"}
+
+        let(:valid_attributes) do
+          {
+            "data"=> {
+              "attributes" => {
+                "title" => 'update title',
+                "content" => 'update content',
+              }
+            }
+          }
+        end
+
+        subject { patch :update, params: valid_attributes.merge("id" => article.id) }
+
+        it "should response with status code 200" do
+          subject
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "should have proper json body" do
+          subject
+          expect(json_data["attributes"]).to include(valid_attributes["data"]["attributes"])
+        end
+
+        it "should update the article title" do
+          subject
+          expect(json_data["attributes"]["title"]).to eq(article.reload.title)
         end
       end
     end
