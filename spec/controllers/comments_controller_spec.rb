@@ -38,9 +38,7 @@ RSpec.describe CommentsController, type: :controller do
     it 'should have proper json body' do
       comment
       subject
-      expect(json_data.first['attributes']).to eq(
-        { 'content' => comment.content }
-      )
+      expect(json_data.first['attributes']).to eq('content' => comment.content)
     end
 
     it 'should have related objects information in the response' do
@@ -87,7 +85,7 @@ RSpec.describe CommentsController, type: :controller do
         it 'renders proper json response' do
           subject
           expect(json_data['attributes']).to eq(
-            { 'content' => 'My awesome article' }
+            'content' => 'My awesome article'
           )
         end
       end
@@ -103,10 +101,8 @@ RSpec.describe CommentsController, type: :controller do
         it 'renders a JSON response with errors for the new comment' do
           subject
           expect(json['errors']).to include(
-            {
-              'source' => { 'pointer' => '/data/attributes/content' },
-              'detail' => "can't be blank"
-            }
+            'source' => { 'pointer' => '/data/attributes/content' },
+            'detail' => "can't be blank"
           )
         end
       end

@@ -52,7 +52,7 @@ RSpec.describe AccessTokensController, type: :controller do
         expect { subject }.to change { User.count }.by(1)
         user = User.find_by(login: 'user1')
         expect(json_data['attributes']).to eq(
-          { 'token' => user.access_token.token }
+          'token' => user.access_token.token
         )
       end
     end
