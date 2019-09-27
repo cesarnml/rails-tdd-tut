@@ -1,14 +1,12 @@
 class ArticlesController < ApplicationController
-  skip_before_action :authorize!, only:[:index, :show]
+  skip_before_action :authorize!, only: %i[index show]
   def index
-    articles = Article.recent
-      .page(params[:page])
-      .per(params[:per_page])
+    articles = Article.recent.page(params[:page]).per(params[:per_page])
     render json: articles
   end
 
   def show
-    article = Article.find(params[:id]) 
+    article = Article.find(params[:id])
     render json: article, status: :ok
   end
 
@@ -16,22 +14,24 @@ class ArticlesController < ApplicationController
     article = current_user.articles.build(article_params)
     article.save!
     render json: article, status: :created
-  rescue 
-    render json: article, adapter: :json_api,
-      serializer: ErrorSerializer,
-      status: :unprocessable_entity
+  rescue StandardError
+    render json: article,
+           adapter: :json_api,
+           serializer: ErrorSerializer,
+           status: :unprocessable_entity
   end
 
   def update
     article = current_user.articles.find(params[:id])
     article.update!(article_params)
-      render json: article, status: :ok
+    render json: article, status: :ok
   rescue ActiveRecord::RecordNotFound
     authorization_error
-  rescue
-    render json: article, adapter: :json_api,
-    serializer: ErrorSerializer,
-    status: :unprocessable_entity
+  rescue StandardError
+    render json: article,
+           adapter: :json_api,
+           serializer: ErrorSerializer,
+           status: :unprocessable_entity
   end
 
   def destroy
@@ -45,8 +45,11 @@ class ArticlesController < ApplicationController
   private
 
   def article_params
-    params.require(:data).require(:attributes)
-      .permit(:title, :content, :slug) || ActionController::Parameters.new
+    params.require(:data).require(:attributes).permit(
+      :title,
+      :content,
+      :slug
+    ) ||
+      ActionController::Parameters.new
   end
 end
-
