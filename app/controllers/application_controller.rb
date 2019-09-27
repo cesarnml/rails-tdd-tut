@@ -40,4 +40,14 @@ class ApplicationController < ActionController::API
     }
     render json: {"errors": [error]}, status: 403
   end
+
+  def invalid_error
+    error = {
+      "status" => "422",
+      "source" => { "pointer" => "/data/attributes/content"},
+      "detail" => "can't be blank",
+      "title" => "Invalid request"
+    }
+    render json: {"errors": [error]}, status: 422
+  end
 end
