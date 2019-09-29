@@ -7,6 +7,7 @@ describe UserAuthenticator::Standard do
 
     shared_examples_for 'invalid authentication' do
       before { user }
+
       it 'should raise an error' do
         expect { subject }.to raise_error(
           UserAuthenticator::Standard::AuthenticationError
@@ -25,11 +26,11 @@ describe UserAuthenticator::Standard do
       it_behaves_like 'invalid authentication'
     end
 
-    context 'when success auth' do
-      let (:user) do
-        create :user, login: 'jsmith', password: 'password'
-      end
+    context 'when successed auth' do
+      let(:user) { create :user, login: 'jsmith', password: 'password' }
+
       before { user }
+
       it 'should set the user found in db' do
         expect { subject }.not_to change { User.count }
         expect(authenticator.user).to eq(user)

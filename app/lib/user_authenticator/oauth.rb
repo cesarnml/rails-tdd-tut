@@ -16,8 +16,6 @@ class UserAuthenticator::Oauth < UserAuthenticator
 
   private
 
-  attr_reader :code
-
   def client
     @client ||=
       Octokit::Client.new(
@@ -28,6 +26,8 @@ class UserAuthenticator::Oauth < UserAuthenticator
 
   def token
     @token ||= client.exchange_code_for_token(code)
+  rescue Octokit::NotFound
+    raise AuthenticationError
   end
 
   def user_data
@@ -48,4 +48,6 @@ class UserAuthenticator::Oauth < UserAuthenticator
         User.create(user_data.merge(provider: 'github'))
       end
   end
+
+  attr_reader :code
 end

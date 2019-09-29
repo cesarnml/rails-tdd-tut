@@ -1,6 +1,4 @@
 class UserAuthenticator
-  class AuthenticationError < StandardError; end
-
   attr_reader :authenticator, :access_token
 
   def initialize(code: nil, login: nil, password: nil)
@@ -10,15 +8,12 @@ class UserAuthenticator
 
   def perform
     authenticator.perform
+
     set_access_token
   end
 
   def user
     authenticator.user
-  end
-
-  def access_token
-    authenticator.access_token
   end
 
   private
