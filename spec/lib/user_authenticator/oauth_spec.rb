@@ -5,6 +5,7 @@ describe UserAuthenticator::Oauth do
     let(:authenticator) { described_class.new('sample_code') }
 
     subject { authenticator.perform }
+
     context 'when code is incorrect' do
       let(:error) { double('Sawyer::Resource', error: 'bad_verification_code') }
       before do
@@ -35,6 +36,7 @@ describe UserAuthenticator::Oauth do
           :exchange_code_for_token
         )
           .and_return('validaccesstoken')
+
         allow_any_instance_of(Octokit::Client).to receive(:user).and_return(
           user_data
         )
@@ -46,13 +48,8 @@ describe UserAuthenticator::Oauth do
 
       it 'should reuse already registered user' do
         user = create :user, user_data
-        expect { subject }.not_to change { User.count }
+        expect { subject }.not_to (change { User.count })
         expect(authenticator.user).to eq(user)
-      end
-
-      it "should create and set user's access token" do
-        expect { subject }.to change { AccessToken.count }.by(1)
-        expect(authenticator.access_token).to be_present
       end
     end
   end
